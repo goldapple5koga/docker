@@ -41,6 +41,21 @@ RUN sed -i -e "s/#listen_addresses = 'localhost'/listen_addresses = 'localhost'/
 # 自動起動
 RUN systemctl enable postgresql
 
+# gitクローン
+RUN yum -y install git
+RUN cd /tmp && mkdir git
+RUN cd /tmp/git
+RUN git clone https://github.com/cstudioteam/handywedge.git
+
+# データベース、DDL、DML
+RUN cd handywedge/handywedge-test-app/sql/
+CMD psql -U postgres -f create_db.sql &&\
+    psql -U postgres -f crete_user.sql &&\
+    psql -U postgres -f create_schema.sql &&\
+    psql -d handywedge_test_app -U handywedge-app -f create_table.sql &&\
+    psql -d handywedge_test_app -U handywedge -f ../../handywedge-master/sql/ddl.sql &&\
+    psql -d handywedge_test_app -U handywedge -f dml.sql
+
 # systemd起動。常に最後に記載する
 VOLUME [ "/sys/fs/cgroup" ]
 CMD ["/usr/sbin/init"]
